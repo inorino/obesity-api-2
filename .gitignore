@@ -1,0 +1,35 @@
+# 原始資料（XPT + CSV，太大不進 git）
+data/
+*.XPT
+*.xpt
+*.csv
+
+# 輸出報告、圖表（不需要部署）
+outputs/
+
+# 3-class 模型（API 只用 binary 版本）
+models/
+
+# 舊版 v2 binary 模型（API 不使用）
+models_binary/model_habit.pkl
+models_binary/model_slim.pkl
+models_binary/model_pure.pkl
+models_binary/model_full.pkl
+models_binary/feature_cols_Full_21feat.pkl
+models_binary/feature_cols_Full_25feat.pkl
+models_binary/feature_cols_Habit_10feat.pkl
+models_binary/feature_cols_PureBehavior_5feat.pkl
+models_binary/feature_cols_Slim_5feat.pkl
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
