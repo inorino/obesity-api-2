@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Obesity Risk Prediction — Case Study</title>
+<style>
+  @page { size: A4; margin: 12mm 13mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --ink:#1a2233; --sub:#5a6577; --line:#e2e6ee; --accent:#2563eb; --accent2:#f97316; --bg:#f6f8fc; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink); font-size: 9.3px; line-height: 1.45;
+  }
+  .head { border-bottom: 2.5px solid var(--accent); padding-bottom: 7px; margin-bottom: 9px; }
+  .head h1 { font-size: 19px; letter-spacing:-0.2px; }
+  .head .sub { color: var(--sub); font-size: 10px; margin-top: 2px; }
+  .meta { margin-top:5px; font-size:8.4px; color:var(--sub); display:flex; gap:14px; flex-wrap:wrap;}
+  .meta b { color: var(--ink); }
+  .thesis {
+    background: var(--bg); border-left: 3px solid var(--accent2);
+    padding: 8px 11px; margin: 9px 0; border-radius: 0 5px 5px 0;
+  }
+  .thesis .big { font-size: 11px; font-weight: 600; }
+  .thesis .big span { color: var(--accent); }
+  .thesis p { margin-top: 4px; color: var(--sub); font-size: 8.8px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin-top: 4px; }
+  h2 {
+    font-size: 9.6px; text-transform: uppercase; letter-spacing: 0.7px;
+    color: var(--accent); margin: 11px 0 5px; padding-bottom: 2px;
+    border-bottom: 1px solid var(--line);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 3.2px 5px; border-bottom: 1px solid var(--line); }
+  th { font-size: 7.8px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--sub); }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .win { color: var(--accent); font-weight: 700; }
+  ol, ul { margin-left: 14px; }
+  li { margin-bottom: 4px; }
+  li b { color: var(--ink); }
+  .pipe {
+    display:flex; align-items:center; gap:4px; flex-wrap:wrap;
+    font-size:7.9px; margin-top:2px;
+  }
+  .pipe .step { background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:3px 6px; }
+  .pipe .arr { color:var(--accent); font-weight:700; }
+  .stack { display:flex; flex-wrap:wrap; gap:4px; margin-top:3px; }
+  .chip { background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:2px 8px; font-size:7.9px; }
+  .foot { margin-top:11px; padding-top:7px; border-top:1px solid var(--line); display:flex; justify-content:space-between; font-size:8px; color:var(--sub); }
+  .foot a { color: var(--accent); text-decoration:none; }
+  code { background:var(--bg); padding:0 3px; border-radius:3px; font-size:8.2px; }
+</style>
+</head>
+<body>
+
+  <div class="head">
+    <h1>Obesity Risk Prediction from Lifestyle Behaviors</h1>
+    <div class="sub">Predicting overweight/obesity from everyday behaviors alone — no medical records required.</div>
+    <div class="meta">
+      <span><b>Data:</b> CDC BRFSS 2022 · n = 329,126</span>
+      <span><b>Model:</b> XGBoost + SMOTE</span>
+      <span><b>Deploy:</b> FastAPI on Render (live)</span>
+      <span><b>Context:</b> Master's ML final project</span>
+    </div>
+  </div>
+
+  <div class="thesis">
+    <div class="big">No medical record needed — <span>daily behaviors alone reach F1 = 0.608</span>; adding demographics reaches 0.680, nearly matching the 0.687 of a model with <i>every</i> chronic-disease diagnosis.</div>
+    <p>The marginal value of 7 chronic-disease history variables is &lt; 1% F1 — evidence supporting behavior-first public-health intervention.</p>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h2>Results — Binary (Normal vs Overweight+Obese)</h2>
+      <table>
+        <thead><tr><th>Feature set</th><th class="n">Feats</th><th class="n">F1</th></tr></thead>
+        <tbody>
+          <tr><td>Full_25feat <span style="color:var(--sub)">(+ chronic disease)</span></td><td class="n">25</td><td class="n win">0.687</td></tr>
+          <tr><td>Behav_15feat <span style="color:var(--sub)">(no disease hx)</span></td><td class="n">15</td><td class="n win">0.680</td></tr>
+          <tr><td>Core_6feat <span style="color:var(--sub)">(pure behavior)</span></td><td class="n">6</td><td class="n win">0.608</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Key Findings</h2>
+      <ol>
+        <li><b>Chronic-disease history adds &lt; 1% F1.</b> Behav_15 vs Full_25 differ by only 0.0067.</li>
+        <li><b>The bottleneck is the Normal/Overweight boundary</b>, not the features — every group gains a uniform +0.19 F1 on the binary task.</li>
+        <li><b>Cross-sectional ≠ longitudinal.</b> In 16-week simulations, the pure-behavior model tracks behavior change correctly, while the 15-feature model is anchored by static demographics — a property of survey data, and a key discussion point.</li>
+      </ol>
+    </div>
+
+    <div>
+      <h2>Pipeline</h2>
+      <div class="pipe">
+        <span class="step">Raw XPT<br>445k × 328</span>
+        <span class="arr">→</span>
+        <span class="step">ETL clean<br>329k × 26</span>
+        <span class="arr">→</span>
+        <span class="step">27-model<br>matrix</span>
+        <span class="arr">→</span>
+        <span class="step">XGBoost<br>+ SMOTE</span>
+        <span class="arr">→</span>
+        <span class="step">Live API<br>Render</span>
+      </div>
+      <p style="color:var(--sub); font-size:8.2px; margin-top:5px;">3 feature sets × 3 algorithms × 3 sampling strategies = 27 models, evaluated on weighted F1. Class imbalance handled with SMOTE; XGBoost won across all strategies.</p>
+
+      <h2>Live API</h2>
+      <table>
+        <tbody>
+          <tr><td><code>POST /predict/core6</code></td><td class="n">6 fields · F1 0.608</td></tr>
+          <tr><td><code>POST /predict/behav15</code></td><td class="n">15 fields · F1 0.680</td></tr>
+          <tr><td><code>GET /docs</code></td><td class="n">Swagger UI</td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--sub); font-size:8.2px; margin-top:4px;">Deployed on Render with an interactive demo presented in-browser, calling the live endpoint for real-time predictions.</p>
+
+      <h2>Tech Stack</h2>
+      <div class="stack">
+        <span class="chip">scikit-learn</span><span class="chip">XGBoost</span>
+        <span class="chip">SMOTE</span><span class="chip">pandas / numpy</span>
+        <span class="chip">FastAPI</span><span class="chip">Pydantic</span>
+        <span class="chip">Uvicorn</span><span class="chip">Render</span>
+        <span class="chip">matplotlib</span><span class="chip">GSAP</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>Inori · inorino@outlook.com</span>
+    <span>Code &amp; live API: <a href="https://github.com/inorino/obesity-api-2">github.com/inorino/obesity-api-2</a> · <a href="https://obesity-api-2-2ro4.onrender.com/docs">live /docs</a></span>
+  </div>
+
+</body>
+</html>
